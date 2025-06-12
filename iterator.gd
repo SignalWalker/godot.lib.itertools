@@ -22,6 +22,15 @@ static func filter(iter: Variant, pred: Callable) -> IterFilter:
 static func filter_map(iter: Variant, pred: Callable, fn: Callable) -> IterMap:
 	return IterMap.new(IterFilter.new(_iter(iter), pred), fn)
 
+func and_map(fn: Callable) -> IterMap:
+	return Iterator.map(self, fn)
+
+func and_filter(fn: Callable) -> IterFilter:
+	return Iterator.filter(self, fn)
+
+func and_filter_map(pred: Callable, fn: Callable) -> IterMap:
+	return Iterator.filter_map(self, pred, fn)
+
 func collect() -> Array:
 	var res: Array = []
 	for item: Variant in self:
@@ -77,15 +86,7 @@ class IterFilter extends Iterator:
 		self.iter = i
 		self.pred = p
 
-	func _iter_init(state: Array) -> bool:
-		return self.iter._iter_init(state)
-
-	func _iter_next(state: Array) -> bool:
-		# advance
-		if !self.iter._iter_next(state):
-			# no next item
-			return false
-		# skip elements that fail the predicate
+	func _skip_filtered(state: Array) -> bool:
 		# TODO :: am i using state correctly here? who knows
 		while !self.pred.call(self.iter._iter_get(state)):
 			# skip to the next item
@@ -93,6 +94,19 @@ class IterFilter extends Iterator:
 				# there is no next item
 				return false
 		return true
+
+	func _iter_init(state: Array) -> bool:
+		if !self.iter._iter_init(state):
+			return false
+		return self._skip_filtered(state)
+
+	func _iter_next(state: Array) -> bool:
+		# advance
+		if !self.iter._iter_next(state):
+			# no next item
+			return false
+		# skip elements that fail the predicate
+		return self._skip_filtered(state)
 
 	func _iter_get(state: Variant) -> Variant:
 		return self.iter._iter_get(state)
