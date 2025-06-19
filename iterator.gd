@@ -15,6 +15,9 @@ static func _iter(i: Variant) -> Object:
 static func is_iterator(i: Object) -> bool:
 	return i != null && i.has_method(&"_iter_init") && i.has_method(&"_iter_next") && i.has_method(&"_iter_get")
 
+static func is_iterable(v: Variant) -> bool:
+	return v != null && (v is Array || v is Dictionary || (v is Object && is_iterator(v)))
+
 static func map(iter: Variant, fn: Callable) -> IterMap:
 	return IterMap.new(_iter(iter), fn)
 
@@ -27,6 +30,18 @@ static func filter_map(iter: Variant, pred: Callable, fn: Callable) -> IterMap:
 static func reverse_enumerate(from_exclusive: int, to_inclusive: int = 0) -> IterArray:
 	return IterArray.new(range(from_exclusive - 1, to_inclusive - 1, -1))
 
+static func all(iter: Variant, pred: Callable) -> bool:
+	for item: Variant in iter:
+		if !pred.call(item):
+			return false
+	return true
+
+static func any(iter: Variant, pred: Callable) -> bool:
+	for item: Variant in iter:
+		if pred.call(item):
+			return true
+	return false
+
 func and_map(fn: Callable) -> IterMap:
 	return Iterator.map(self, fn)
 
@@ -35,6 +50,12 @@ func and_filter(fn: Callable) -> IterFilter:
 
 func and_filter_map(pred: Callable, fn: Callable) -> IterMap:
 	return Iterator.filter_map(self, pred, fn)
+
+func and_all(pred: Callable) -> bool:
+	return Iterator.all(self, pred)
+
+func and_any(pred: Callable) -> bool:
+	return Iterator.any(self, pred)
 
 func collect() -> Array:
 	var res: Array = []
