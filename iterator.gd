@@ -6,6 +6,8 @@ func _init() -> void:
 static func _iter(i: Variant) -> Object:
 	if i is Array:
 		return IterArray.new(i as Array)
+	elif i is Dictionary:
+		return IterArray.new((i as Dictionary).values())
 	assert(i is Object && is_iterator(i as Object), "object provided to iterator transformer is not iterable")
 	return i
 
@@ -22,6 +24,9 @@ static func filter(iter: Variant, pred: Callable) -> IterFilter:
 static func filter_map(iter: Variant, pred: Callable, fn: Callable) -> IterMap:
 	return IterMap.new(IterFilter.new(_iter(iter), pred), fn)
 
+static func reverse_enumerate(from_exclusive: int, to_inclusive: int = 0) -> IterArray:
+	return IterArray.new(range(from_exclusive - 1, to_inclusive - 1, -1))
+
 func and_map(fn: Callable) -> IterMap:
 	return Iterator.map(self, fn)
 
@@ -36,6 +41,10 @@ func collect() -> Array:
 	for item: Variant in self:
 		res.push_back(item)
 	return res
+
+func collect_into(c: Array) -> void:
+	for item: Variant in self:
+		c.push_back(item)
 
 class IterArray extends Iterator:
 	var arr: Array
