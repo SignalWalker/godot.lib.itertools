@@ -11,7 +11,6 @@ static func _iter(i: Variant) -> Object:
 	assert(i is Object && is_iterator(i as Object), "object provided to iterator transformer is not iterable")
 	return i
 
-
 static func is_iterator(i: Object) -> bool:
 	return i != null && i.has_method(&"_iter_init") && i.has_method(&"_iter_next") && i.has_method(&"_iter_get")
 
